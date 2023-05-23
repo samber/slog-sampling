@@ -175,9 +175,13 @@ import (
 	"golang.org/x/exp/slog"
 )
 
-// Will print 50% of errors, 20% of warnings and 1% of lower levels.
+// Will print 100% of log entries during the night, or 50% of errors, 20% of warnings and 1% of lower levels.
 option := slogsampling.CustomSamplingOption{
     Sampler: func(ctx context.Context, record slog.Record) float64 {
+        if record.Time.Hour() < 6 || record.Time.Hour() > 22 {
+            return 1
+        }
+
         switch record.Level {
         case slog.LevelError:
             return 0.5
