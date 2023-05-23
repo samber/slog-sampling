@@ -58,7 +58,7 @@ The sampling middleware can be used standalone or with `slog-multi` helper.
 3 strategies are available:
 - [Uniform sampling](#uniform-sampling): drop % of logs
 - [Treshold sampling](#treshold-sampling): drop % of logs after a threshold
-- [Custom sampler](#)
+- [Custom sampler](#custom-sampler)
 
 ### Uniform sampling
 
