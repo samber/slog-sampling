@@ -12,6 +12,8 @@
 
 A middleware that samples incoming records which caps the CPU and I/O load of logging while attempting to preserve a representative subset of your logs.
 
+Sampling fixes throughput by dropping repetitive log entries.
+
 **See also:**
 
 - [slog-multi](https://github.com/samber/slog-multi): `slog.Handler` chaining, fanout, routing, failover, load balancing...
