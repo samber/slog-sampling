@@ -55,16 +55,20 @@ GoDoc: [https://pkg.go.dev/github.com/samber/slog-sampling](https://pkg.go.dev/g
 
 The sampling middleware can be used standalone or with `slog-multi` helper.
 
-### Handler options
+3 strategies are available:
+- [Uniform sampling](#uniform-sampling): drop % of logs
+- [Treshold sampling](#treshold-sampling): drop % of logs after a threshold
+- [Custom sampler](#)
+
+### Uniform sampling
 
 ```go
-type Option struct {
-	// This will log the first `First` log entries with the same level and message
-	// in a `Tick` interval as-is. Following that, it will allow through
-	// every `Thereafter`th log entry with the same level and message in that interval.
+type UniformSamplingOption struct {
+	// This will log the first `Threshold` log entries with the same level and message
+	// in a `Tick` interval as-is. Following that, it will allow `Rate` in the range [0.0, 1.0].
 	Tick       time.Duration
-	First      uint64
-	Thereafter uint64
+	Threshold  uint64
+	Rate       float64
 
     // Optional hooks
 	OnAccepted func(context.Context, slog.Record)
@@ -72,9 +76,7 @@ type Option struct {
 }
 ```
 
-If `Thereafter` is zero, the middleware will drop all log entries after the first `First` records in that interval.
-
-### Using `slog-multi`
+Using `slog-multi`:
 
 ```go
 import (
@@ -83,11 +85,10 @@ import (
 	"golang.org/x/exp/slog"
 )
 
-// Will print the first 10 entries having the same level+message, then every 10th messages until next interval.
-option := slogsampling.Option{
-    Tick:       5 * time.Second,
-    First:      10,
-    Thereafter: 10,
+// Will print 30% of entries.
+option := slogsampling.UniformSamplingOption{
+	// The sample rate for sampling traces in the range [0.0, 1.0].
+    Rate:       0.33,
 
     OnAccepted: func(context.Context, slog.Record) {
         // ...
@@ -99,12 +100,30 @@ option := slogsampling.Option{
 
 logger := slog.New(
     slogmulti.
-        Pipe(option.NewSamplingMiddleware()).
+        Pipe(option.NewMiddleware()).
         Handler(slog.NewJSONHandler(os.Stdout)),
 )
 ```
 
-### Standalone
+### Treshold sampling
+
+```go
+type ThresholdSamplingOption struct {
+	// This will log the first `Threshold` log entries with the same level and message
+	// in a `Tick` interval as-is. Following that, it will allow `Rate` in the range [0.0, 1.0].
+	Tick       time.Duration
+	Threshold  uint64
+	Rate       float64
+
+    // Optional hooks
+	OnAccepted func(context.Context, slog.Record)
+	OnDropped  func(context.Context, slog.Record)
+}
+```
+
+If `Rate` is zero, the middleware will drop all log entries after the first `Threshold` records in that interval.
+
+Using `slog-multi`:
 
 ```go
 import (
@@ -114,10 +133,10 @@ import (
 )
 
 // Will print the first 10 entries having the same level+message, then every 10th messages until next interval.
-option := slogsampling.Option{
+option := slogsampling.ThresholdSamplingOption{
     Tick:       5 * time.Second,
-    First:      10,
-    Thereafter: 10,
+    Threshold:  10,
+    Rate:       10,
 
     OnAccepted: func(context.Context, slog.Record) {
         // ...
@@ -128,9 +147,59 @@ option := slogsampling.Option{
 }
 
 logger := slog.New(
-    option.NewSamplingMiddleware()(
-        slog.NewJSONHandler(os.Stdout),
-    ),
+    slogmulti.
+        Pipe(option.NewMiddleware()).
+        Handler(slog.NewJSONHandler(os.Stdout)),
+)
+```
+
+### Custom sampler
+
+```go
+type CustomSamplingOption struct {
+	// The sample rate for sampling traces in the range [0.0, 1.0].
+	Sampler func(context.Context, slog.Record) float64
+
+    // Optional hooks
+	OnAccepted func(context.Context, slog.Record)
+	OnDropped  func(context.Context, slog.Record)
+}
+```
+
+Using `slog-multi`:
+
+```go
+import (
+	slogmulti "github.com/samber/slog-multi"
+	slogsampling "github.com/samber/slog-sampling"
+	"golang.org/x/exp/slog"
+)
+
+// Will print 50% of errors, 20% of warnings and 1% of lower levels.
+option := slogsampling.CustomSamplingOption{
+    Sampler: func(ctx context.Context, record slog.Record) float64 {
+        switch record.Level {
+        case slog.LevelError:
+            return 0.5
+        case slog.LevelWarn:
+            return 0.2
+        default:
+            return 0.01
+        }
+    },
+
+    OnAccepted: func(context.Context, slog.Record) {
+        // ...
+    },
+    OnDropped: func(context.Context, slog.Record) {
+        // ...
+    },
+}
+
+logger := slog.New(
+    slogmulti.
+        Pipe(option.NewMiddleware()).
+        Handler(slog.NewJSONHandler(os.Stdout)),
 )
 ```
 

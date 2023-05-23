@@ -16,10 +16,39 @@ func main() {
 	var accepted atomic.Int64
 	var dropped atomic.Int64
 
-	option := slogsampling.Option{
-		Tick:       5 * time.Second,
-		First:      10,
-		Thereafter: 10,
+	// option := slogsampling.ThresholdSamplingOption{
+	// 	Tick:      5 * time.Second,
+	// 	Threshold: 10,
+	// 	Rate:      10,
+	// 	OnAccepted: func(context.Context, slog.Record) {
+	// 		accepted.Add(1)
+	// 	},
+	// 	OnDropped: func(context.Context, slog.Record) {
+	// 		dropped.Add(1)
+	// 	},
+	// }
+
+	// option := slogsampling.CustomSamplingOption{
+	// 	Sampler: func(ctx context.Context, record slog.Record) float64 {
+	// 		switch record.Level {
+	// 		case slog.LevelError:
+	// 			return 0.5
+	// 		case slog.LevelWarn:
+	// 			return 0.2
+	// 		default:
+	// 			return 0.01
+	// 		}
+	// 	},
+	// 	OnAccepted: func(context.Context, slog.Record) {
+	// 		accepted.Add(1)
+	// 	},
+	// 	OnDropped: func(context.Context, slog.Record) {
+	// 		dropped.Add(1)
+	// 	},
+	// }
+
+	option := slogsampling.UniformSamplingOption{
+		Rate: 0.33,
 		OnAccepted: func(context.Context, slog.Record) {
 			accepted.Add(1)
 		},
@@ -30,7 +59,7 @@ func main() {
 
 	logger := slog.New(
 		slogmulti.
-			Pipe(option.NewSamplingMiddleware()).
+			Pipe(option.NewMiddleware()).
 			Handler(slog.NewJSONHandler(os.Stdout)),
 	)
 
