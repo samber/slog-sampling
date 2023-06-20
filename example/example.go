@@ -60,7 +60,7 @@ func main() {
 	logger := slog.New(
 		slogmulti.
 			Pipe(option.NewMiddleware()).
-			Handler(slog.NewJSONHandler(os.Stdout)),
+			Handler(slog.NewJSONHandler(os.Stdout, &slog.HandlerOptions{})),
 	)
 
 	l := logger.
