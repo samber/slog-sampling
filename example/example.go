@@ -7,9 +7,10 @@ import (
 	"sync/atomic"
 	"time"
 
+	"log/slog"
+
 	slogmulti "github.com/samber/slog-multi"
 	slogsampling "github.com/samber/slog-sampling"
-	"golang.org/x/exp/slog"
 )
 
 func main() {

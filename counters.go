@@ -4,7 +4,7 @@ import (
 	"sync/atomic"
 	"time"
 
-	"golang.org/x/exp/slog"
+	"log/slog"
 )
 
 const countersPerLevel = 4096

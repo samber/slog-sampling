@@ -3,7 +3,7 @@ package slogsampling
 import (
 	"context"
 
-	"golang.org/x/exp/slog"
+	"log/slog"
 )
 
 func hook(hook func(context.Context, slog.Record), ctx context.Context, record slog.Record) {
