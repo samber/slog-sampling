@@ -2,10 +2,7 @@ module github.com/samber/slog-sampling
 
 go 1.21
 
-require (
-	github.com/samber/slog-multi v1.0.0
-	go.uber.org/goleak v1.2.1
-)
+require github.com/samber/slog-multi v1.0.0
 
 require (
 	github.com/samber/lo v1.38.1 // indirect
