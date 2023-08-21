@@ -99,7 +99,7 @@ option := slogsampling.UniformSamplingOption{
 logger := slog.New(
     slogmulti.
         Pipe(option.NewMiddleware()).
-        Handler(slog.NewJSONHandler(os.Stdout)),
+        Handler(slog.NewJSONHandler(os.Stdout, nil)),
 )
 ```
 
@@ -147,7 +147,7 @@ option := slogsampling.ThresholdSamplingOption{
 logger := slog.New(
     slogmulti.
         Pipe(option.NewMiddleware()).
-        Handler(slog.NewJSONHandler(os.Stdout)),
+        Handler(slog.NewJSONHandler(os.Stdout, nil)),
 )
 ```
 
@@ -201,7 +201,7 @@ option := slogsampling.CustomSamplingOption{
 logger := slog.New(
     slogmulti.
         Pipe(option.NewMiddleware()).
-        Handler(slog.NewJSONHandler(os.Stdout)),
+        Handler(slog.NewJSONHandler(os.Stdout, nil)),
 )
 ```
 
