@@ -66,13 +66,10 @@ The sampling middleware can be used standalone or with `slog-multi` helper.
 
 ```go
 type UniformSamplingOption struct {
-	// This will log the first `Threshold` log entries with the same level and message
-	// in a `Tick` interval as-is. Following that, it will allow `Rate` in the range [0.0, 1.0].
-	Tick       time.Duration
-	Threshold  uint64
-	Rate       float64
+	// The sample rate for sampling traces in the range [0.0, 1.0].
+	Rate float64
 
-    // Optional hooks
+	// Optional hooks
 	OnAccepted func(context.Context, slog.Record)
 	OnDropped  func(context.Context, slog.Record)
 }
