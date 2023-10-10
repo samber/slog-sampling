@@ -2,8 +2,6 @@ package slogsampling
 
 import (
 	"context"
-	"math/rand"
-	"time"
 
 	"log/slog"
 
@@ -21,7 +19,7 @@ type CustomSamplingOption struct {
 
 // NewMiddleware returns a slog-multi middleware.
 func (o CustomSamplingOption) NewMiddleware() slogmulti.Middleware {
-	rand := rand.New(rand.NewSource(time.Now().UnixNano()))
+	rand := newLockedRNG()
 
 	return slogmulti.NewInlineMiddleware(
 		func(ctx context.Context, level slog.Level, next func(context.Context, slog.Level) bool) bool {

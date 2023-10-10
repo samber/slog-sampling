@@ -2,7 +2,6 @@ package slogsampling
 
 import (
 	"context"
-	"math/rand"
 	"time"
 
 	"log/slog"
@@ -28,7 +27,7 @@ func (o ThresholdSamplingOption) NewMiddleware() slogmulti.Middleware {
 		panic("unexpected Rate: must be between 0.0 and 1.0")
 	}
 
-	rand := rand.New(rand.NewSource(time.Now().UnixNano()))
+	rand := newLockedRNG()
 	counters := newCounters()
 
 	return slogmulti.NewInlineMiddleware(
