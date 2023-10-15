@@ -59,7 +59,7 @@ The sampling middleware can be used standalone or with `slog-multi` helper.
 
 3 strategies are available:
 - [Uniform sampling](#uniform-sampling): drop % of logs
-- [Treshold sampling](#treshold-sampling): drop % of logs after a threshold
+- [Threshold sampling](#threshold-sampling): drop % of logs after a threshold
 - [Custom sampler](#custom-sampler)
 
 ### Uniform sampling
@@ -87,7 +87,7 @@ import (
 	"log/slog"
 )
 
-// Will print 30% of entries.
+// Will print 33% of entries.
 option := slogsampling.UniformSamplingOption{
 	// The sample rate for sampling traces in the range [0.0, 1.0].
     Rate:       0.33,
@@ -107,7 +107,7 @@ logger := slog.New(
 )
 ```
 
-### Treshold sampling
+### Threshold sampling
 
 ```go
 type ThresholdSamplingOption struct {
