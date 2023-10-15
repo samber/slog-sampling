@@ -22,6 +22,7 @@ Sampling fixes throughput by dropping repetitive log entries.
 - [slog-gin](https://github.com/samber/slog-gin): Gin middleware for `slog` logger
 - [slog-echo](https://github.com/samber/slog-echo): Echo middleware for `slog` logger
 - [slog-fiber](https://github.com/samber/slog-fiber): Fiber middleware for `slog` logger
+- [slog-chi](https://github.com/samber/slog-chi): Chi middleware for `slog` logger
 - [slog-datadog](https://github.com/samber/slog-datadog): A `slog` handler for `Datadog`
 - [slog-rollbar](https://github.com/samber/slog-rollbar): A `slog` handler for `Rollbar`
 - [slog-sentry](https://github.com/samber/slog-sentry): A `slog` handler for `Sentry`
@@ -66,13 +67,10 @@ The sampling middleware can be used standalone or with `slog-multi` helper.
 
 ```go
 type UniformSamplingOption struct {
-	// This will log the first `Threshold` log entries with the same level and message
-	// in a `Tick` interval as-is. Following that, it will allow `Rate` in the range [0.0, 1.0].
-	Tick       time.Duration
-	Threshold  uint64
-	Rate       float64
+	// The sample rate for sampling traces in the range [0.0, 1.0].
+	Rate float64
 
-    // Optional hooks
+	// Optional hooks
 	OnAccepted func(context.Context, slog.Record)
 	OnDropped  func(context.Context, slog.Record)
 }
