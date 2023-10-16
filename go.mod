@@ -6,7 +6,6 @@ require (
 	github.com/cornelk/hashmap v1.0.8
 	github.com/samber/slog-common v0.13.0
 	github.com/samber/slog-multi v1.0.0
-	go.uber.org/goleak v1.2.1
 )
 
 require (
