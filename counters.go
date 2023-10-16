@@ -3,11 +3,16 @@ package slogsampling
 import (
 	"sync/atomic"
 	"time"
-
-	"log/slog"
 )
 
 const countersPerLevel = 4096
+
+func newCounter() *counter {
+	return &counter{
+		resetAt: atomic.Int64{},
+		counter: atomic.Uint64{},
+	}
+}
 
 type counter struct {
 	resetAt atomic.Int64
@@ -31,23 +36,4 @@ func (c *counter) Inc(t time.Time, tick time.Duration) uint64 {
 	}
 
 	return 1
-}
-
-type counters map[slog.Level]*[countersPerLevel]counter
-
-func newCounters() *counters {
-	return &counters{}
-}
-
-func (cs *counters) get(lvl slog.Level, record slog.Record) *counter {
-	key := record.Message
-	hash := fnv32a(key)
-	n := hash % countersPerLevel
-
-	_, ok := (*cs)[lvl]
-	if !ok {
-		(*cs)[lvl] = &[countersPerLevel]counter{}
-	}
-
-	return &(*cs)[lvl][n]
 }

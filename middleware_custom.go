@@ -28,7 +28,14 @@ func (o CustomSamplingOption) NewMiddleware() slogmulti.Middleware {
 			return next(ctx, level)
 		},
 		func(ctx context.Context, record slog.Record, next func(context.Context, slog.Record) error) error {
-			if rand.Float64() >= o.Sampler(ctx, record) {
+			rate := o.Sampler(ctx, record)
+			if rate < 0.0 || rate > 1.0 {
+				// unexpected rate: we just drop
+				hook(o.OnDropped, ctx, record)
+				return nil
+			}
+
+			if rand.Float64() >= rate {
 				hook(o.OnDropped, ctx, record)
 				return nil
 			}

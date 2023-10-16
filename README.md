@@ -109,11 +109,14 @@ logger := slog.New(
 
 ```go
 type ThresholdSamplingOption struct {
-	// This will log the first `Threshold` log entries with the same level and message
+	// This will log the first `Threshold` log entries with the same hash.
 	// in a `Tick` interval as-is. Following that, it will allow `Rate` in the range [0.0, 1.0].
 	Tick       time.Duration
 	Threshold  uint64
 	Rate       float64
+
+	// Group similar logs (default: by level and message)
+    Matcher func(ctx context.Context, record *slog.Record) string
 
     // Optional hooks
 	OnAccepted func(context.Context, slog.Record)
@@ -152,6 +155,15 @@ logger := slog.New(
         Handler(slog.NewJSONHandler(os.Stdout, nil)),
 )
 ```
+
+Available `Matcher`:
+- `slogsampling.MatchByLevelAndMessage` (default)
+- `slogsampling.MatchAll`
+- `slogsampling.MatchByLevel`
+- `slogsampling.MatchByMessage`
+- `slogsampling.MatchBySource`
+- `slogsampling.MatchByAttribute`
+- `slogsampling.MatchByContextValue`
 
 ### Custom sampler
 
