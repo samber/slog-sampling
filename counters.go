@@ -5,8 +5,6 @@ import (
 	"time"
 )
 
-const countersPerLevel = 4096
-
 func newCounter() *counter {
 	return &counter{
 		resetAt: atomic.Int64{},

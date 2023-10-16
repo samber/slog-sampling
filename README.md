@@ -67,12 +67,12 @@ The sampling middleware can be used standalone or with `slog-multi` helper.
 
 ```go
 type UniformSamplingOption struct {
-	// The sample rate for sampling traces in the range [0.0, 1.0].
-	Rate float64
+    // The sample rate for sampling traces in the range [0.0, 1.0].
+    Rate float64
 
-	// Optional hooks
-	OnAccepted func(context.Context, slog.Record)
-	OnDropped  func(context.Context, slog.Record)
+    // Optional hooks
+    OnAccepted func(context.Context, slog.Record)
+    OnDropped  func(context.Context, slog.Record)
 }
 ```
 
@@ -80,9 +80,9 @@ Using `slog-multi`:
 
 ```go
 import (
-	slogmulti "github.com/samber/slog-multi"
-	slogsampling "github.com/samber/slog-sampling"
-	"log/slog"
+    slogmulti "github.com/samber/slog-multi"
+    slogsampling "github.com/samber/slog-sampling"
+    "log/slog"
 )
 
 // Will print 33% of entries.
@@ -109,18 +109,18 @@ logger := slog.New(
 
 ```go
 type ThresholdSamplingOption struct {
-	// This will log the first `Threshold` log entries with the same hash.
-	// in a `Tick` interval as-is. Following that, it will allow `Rate` in the range [0.0, 1.0].
-	Tick       time.Duration
-	Threshold  uint64
-	Rate       float64
+    // This will log the first `Threshold` log entries with the same hash.
+    // in a `Tick` interval as-is. Following that, it will allow `Rate` in the range [0.0, 1.0].
+    Tick       time.Duration
+    Threshold  uint64
+    Rate       float64
 
-	// Group similar logs (default: by level and message)
+    // Group similar logs (default: by level and message)
     Matcher func(ctx context.Context, record *slog.Record) string
 
     // Optional hooks
-	OnAccepted func(context.Context, slog.Record)
-	OnDropped  func(context.Context, slog.Record)
+    OnAccepted func(context.Context, slog.Record)
+    OnDropped  func(context.Context, slog.Record)
 }
 ```
 
@@ -130,9 +130,9 @@ Using `slog-multi`:
 
 ```go
 import (
-	slogmulti "github.com/samber/slog-multi"
-	slogsampling "github.com/samber/slog-sampling"
-	"log/slog"
+    slogmulti "github.com/samber/slog-multi"
+    slogsampling "github.com/samber/slog-sampling"
+    "log/slog"
 )
 
 // Will print the first 10 entries having the same level+message, then every 10th messages until next interval.
@@ -169,12 +169,12 @@ Available `Matcher`:
 
 ```go
 type CustomSamplingOption struct {
-	// The sample rate for sampling traces in the range [0.0, 1.0].
-	Sampler func(context.Context, slog.Record) float64
+    // The sample rate for sampling traces in the range [0.0, 1.0].
+    Sampler func(context.Context, slog.Record) float64
 
     // Optional hooks
-	OnAccepted func(context.Context, slog.Record)
-	OnDropped  func(context.Context, slog.Record)
+    OnAccepted func(context.Context, slog.Record)
+    OnDropped  func(context.Context, slog.Record)
 }
 ```
 
@@ -182,9 +182,9 @@ Using `slog-multi`:
 
 ```go
 import (
-	slogmulti "github.com/samber/slog-multi"
-	slogsampling "github.com/samber/slog-sampling"
-	"log/slog"
+    slogmulti "github.com/samber/slog-multi"
+    slogsampling "github.com/samber/slog-sampling"
+    "log/slog"
 )
 
 // Will print 100% of log entries during the night, or 50% of errors, 20% of warnings and 1% of lower levels.

@@ -36,7 +36,8 @@ func MatchByMessage() func(context.Context, *slog.Record) string {
 
 func MatchByLevelAndMessage() func(context.Context, *slog.Record) string {
 	return func(ctx context.Context, r *slog.Record) string {
-		return r.Level.String() + r.Message
+		// separator is used to avoid collisions
+		return r.Level.String() + "@" + r.Message
 	}
 }
 
@@ -45,14 +46,8 @@ func MatchBySource() func(context.Context, *slog.Record) string {
 		fs := runtime.CallersFrames([]uintptr{r.PC})
 		f, _ := fs.Next()
 
-		// colision risk, e.g.:
-		//   - line 33: func Example
-		//   - line 3: func Example3
-		var buf bytes.Buffer
-		buf.WriteString(f.File)
-		buf.WriteString(f.Function)
-		buf.WriteString(strconv.Itoa(f.Line))
-		return buf.String()
+		// separator is used to avoid collisions
+		return fmt.Sprintf("%s@%d@%s", f.File, f.Line, f.Function)
 	}
 }
 
@@ -90,11 +85,11 @@ func anyToString(value any) string {
 	}
 
 	// primitive types
-	switch value.(type) {
+	switch v := value.(type) {
 	case []byte:
-		return string(value.([]byte))
+		return string(v)
 	case string:
-		return value.(string)
+		return v
 	case int, int64, int32, int16, int8:
 		return strconv.FormatInt(value.(int64), 10)
 	case uint, uint64, uint32, uint16, uint8:
