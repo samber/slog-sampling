@@ -63,6 +63,22 @@ func main() {
 	// 	},
 	// }
 
+	// option := slogsampling.AbsoluteSamplingOption{
+	// 	Tick: 5 * time.Second,
+	// 	Max:  10,
+
+	// 	Matcher: func(ctx context.Context, record *slog.Record) string {
+	// 		return record.Level.String()
+	// 	},
+
+	// 	OnAccepted: func(context.Context, slog.Record) {
+	// 		accepted.Add(1)
+	// 	},
+	// 	OnDropped: func(context.Context, slog.Record) {
+	// 		dropped.Add(1)
+	// 	},
+	// }
+
 	logger := slog.New(
 		slogmulti.
 			Pipe(option.NewMiddleware()).

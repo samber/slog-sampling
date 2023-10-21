@@ -61,7 +61,12 @@ The sampling middleware can be used standalone or with `slog-multi` helper.
 3 strategies are available:
 - [Uniform sampling](#uniform-sampling): drop % of logs
 - [Threshold sampling](#threshold-sampling): drop % of logs after a threshold
+- [Absolute sampling](#absolute-sampling): dynamic sampling beyond max accepted logs throughput
 - [Custom sampler](#custom-sampler)
+
+A combination of multiple sampling strategies can be chained. Eg:
+- drop when a single log message is produced more than 100 times per second
+- drop above 1000 log records per second (globally)
 
 ### Uniform sampling
 
@@ -164,6 +169,10 @@ Available `Matcher`:
 - `slogsampling.MatchBySource`
 - `slogsampling.MatchByAttribute`
 - `slogsampling.MatchByContextValue`
+
+### Absolute sampling
+
+// TODO
 
 ### Custom sampler
 
