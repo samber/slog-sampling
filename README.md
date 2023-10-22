@@ -64,7 +64,7 @@ GoDoc: [https://pkg.go.dev/github.com/samber/slog-sampling](https://pkg.go.dev/g
 - [Absolute sampling](#absolute-sampling): limit logs throughput to a fixed number of records
 - [Custom sampler](#custom-sampler)
 
-The sampling middleware can be used standalone or with `slog-multi` helper.
+The sampling middleware can be used standalone or with the `slog-multi` helpers.
 
 A combination of multiple sampling strategies can be chained. Eg:
 - drop when a single log message is produced more than 100 times per second
@@ -96,7 +96,7 @@ type UniformSamplingOption struct {
 }
 ```
 
-Using `slog-multi`:
+Example using `slog-multi`:
 
 ```go
 import (
@@ -139,7 +139,7 @@ type ThresholdSamplingOption struct {
 
 If `Rate` is zero, the middleware will drop all log entries after the first `Threshold` records in that interval.
 
-Using `slog-multi`:
+Example using `slog-multi`:
 
 ```go
 import (
@@ -152,7 +152,7 @@ import (
 option := slogsampling.ThresholdSamplingOption{
     Tick:       5 * time.Second,
     Threshold:  10,
-    Rate:       10,
+    Rate:       0.1,
 }
 
 logger := slog.New(
@@ -161,15 +161,6 @@ logger := slog.New(
         Handler(slog.NewJSONHandler(os.Stdout, nil)),
 )
 ```
-
-Available `Matcher`:
-- `slogsampling.MatchByLevelAndMessage` (default)
-- `slogsampling.MatchAll`
-- `slogsampling.MatchByLevel`
-- `slogsampling.MatchByMessage`
-- `slogsampling.MatchBySource`
-- `slogsampling.MatchByAttribute`
-- `slogsampling.MatchByContextValue`
 
 ### Absolute sampling
 
@@ -190,7 +181,7 @@ type AbsoluteSamplingOption struct {
 }
 ```
 
-Using `slog-multi`:
+Example using `slog-multi`:
 
 ```go
 import (
@@ -214,15 +205,6 @@ logger := slog.New(
 )
 ```
 
-Available `Matcher`:
-- `slogsampling.MatchByLevelAndMessage` (default)
-- `slogsampling.MatchAll`
-- `slogsampling.MatchByLevel`
-- `slogsampling.MatchByMessage`
-- `slogsampling.MatchBySource`
-- `slogsampling.MatchByAttribute`
-- `slogsampling.MatchByContextValue`
-
 ### Custom sampler
 
 ```go
@@ -236,7 +218,7 @@ type CustomSamplingOption struct {
 }
 ```
 
-Using `slog-multi`:
+Example using `slog-multi`:
 
 ```go
 import (
