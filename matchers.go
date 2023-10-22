@@ -5,6 +5,7 @@ import (
 	"context"
 	"encoding/gob"
 	"fmt"
+	"hash/fnv"
 	"log/slog"
 	"runtime"
 	"strconv"
@@ -14,6 +15,8 @@ import (
 
 var DefaultMatcher = MatchByLevelAndMessage()
 
+// Matcher is a function that returns a string hash for a given record.
+// Returning []byte would have been much much better, but go's hashmap doesn't support it. 🤬
 type Matcher func(context.Context, *slog.Record) string
 
 func MatchAll() func(context.Context, *slog.Record) string {
@@ -112,4 +115,20 @@ func anyToString(value any) string {
 	}
 
 	return buf.String()
+}
+
+func CompactionFNV32a(input string) string {
+	hash := fnv.New32a()
+	hash.Write([]byte(input))
+	return strconv.FormatInt(int64(hash.Sum32()), 10)
+}
+
+func CompactionFNV64a(input string) string {
+	hash := fnv.New64a()
+	hash.Write([]byte(input))
+	return strconv.FormatInt(int64(hash.Sum64()), 10)
+}
+
+func CompactionFNV128a(input string) string {
+	return string(fnv.New128a().Sum([]byte(input)))
 }
