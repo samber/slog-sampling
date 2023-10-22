@@ -56,19 +56,32 @@ No breaking changes will be made to exported APIs before v2.0.0.
 
 GoDoc: [https://pkg.go.dev/github.com/samber/slog-sampling](https://pkg.go.dev/github.com/samber/slog-sampling)
 
-The sampling middleware can be used standalone or with `slog-multi` helper.
+### Middlewares
 
 3 strategies are available:
 - [Uniform sampling](#uniform-sampling): drop % of logs
 - [Threshold sampling](#threshold-sampling): drop % of logs after a threshold
-- [Absolute sampling](#absolute-sampling): dynamic sampling beyond max accepted logs throughput
+- [Absolute sampling](#absolute-sampling): limit logs throughput to a fixed number of records
 - [Custom sampler](#custom-sampler)
 
-Similar log records can be deduplicated and rate limited using the `Matcher` API.
+The sampling middleware can be used standalone or with `slog-multi` helper.
 
 A combination of multiple sampling strategies can be chained. Eg:
 - drop when a single log message is produced more than 100 times per second
 - drop above 1000 log records per second (globally)
+
+### Matchers
+
+Similar log records can be deduplicated and rate-limited using the `Matcher` API.
+
+Available `Matcher`:
+- `slogsampling.MatchByLevelAndMessage` (default)
+- `slogsampling.MatchAll`
+- `slogsampling.MatchByLevel`
+- `slogsampling.MatchByMessage`
+- `slogsampling.MatchBySource`
+- `slogsampling.MatchByAttribute`
+- `slogsampling.MatchByContextValue`
 
 ### Uniform sampling
 
