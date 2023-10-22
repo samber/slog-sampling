@@ -3,7 +3,6 @@ package slogsampling
 import (
 	"context"
 	"log/slog"
-	"math/rand"
 	"time"
 
 	"github.com/cornelk/hashmap"
@@ -35,7 +34,6 @@ func (o AbsoluteSamplingOption) NewMiddleware() slogmulti.Middleware {
 		o.Matcher = DefaultMatcher
 	}
 
-	rand := rand.New(rand.NewSource(time.Now().UnixNano()))
 	counters := hashmap.New[string, *counterWithMemory]() // @TODO: implement LRU or LFU draining
 
 	return slogmulti.NewInlineMiddleware(
@@ -44,17 +42,20 @@ func (o AbsoluteSamplingOption) NewMiddleware() slogmulti.Middleware {
 		},
 		func(ctx context.Context, record slog.Record, next func(context.Context, slog.Record) error) error {
 			key := o.Matcher(ctx, &record)
-
 			c, _ := counters.GetOrInsert(key, newCounterWithMemory())
-
 			n, p := c.Inc(o.Tick)
+
+			random, err := randomPercentage(1000) // 0.001 precision
+			if err != nil {
+				return err
+			}
 
 			// 3 cases:
 			//   - current interval is over threshold but not previous -> drop
 			//   - previous interval is over threshold -> apply rate limit
 			//   - none of current and previous intervals are over threshold -> accept
 
-			if (n > o.Max && p <= o.Max) || (p > o.Max && rand.Float64() >= float64(o.Max)/float64(p)) {
+			if (n > o.Max && p <= o.Max) || (p > o.Max && random >= float64(o.Max)/float64(p)) {
 				hook(o.OnDropped, ctx, record)
 				return nil
 			}

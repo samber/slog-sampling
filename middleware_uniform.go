@@ -2,8 +2,6 @@ package slogsampling
 
 import (
 	"context"
-	"math/rand"
-	"time"
 
 	"log/slog"
 
@@ -25,14 +23,17 @@ func (o UniformSamplingOption) NewMiddleware() slogmulti.Middleware {
 		panic("unexpected Rate: must be between 0.0 and 1.0")
 	}
 
-	rand := rand.New(rand.NewSource(time.Now().UnixNano()))
-
 	return slogmulti.NewInlineMiddleware(
 		func(ctx context.Context, level slog.Level, next func(context.Context, slog.Level) bool) bool {
 			return next(ctx, level)
 		},
 		func(ctx context.Context, record slog.Record, next func(context.Context, slog.Record) error) error {
-			if rand.Float64() >= o.Rate {
+			random, err := randomPercentage(1000) // 0.001 precision
+			if err != nil {
+				return err
+			}
+
+			if random >= o.Rate {
 				hook(o.OnDropped, ctx, record)
 				return nil
 			}

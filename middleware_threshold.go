@@ -2,7 +2,6 @@ package slogsampling
 
 import (
 	"context"
-	"math/rand"
 	"time"
 
 	"log/slog"
@@ -36,7 +35,6 @@ func (o ThresholdSamplingOption) NewMiddleware() slogmulti.Middleware {
 		o.Matcher = DefaultMatcher
 	}
 
-	rand := rand.New(rand.NewSource(time.Now().UnixNano()))
 	counters := hashmap.New[string, *counter]() // @TODO: implement LRU or LFU draining
 
 	return slogmulti.NewInlineMiddleware(
@@ -45,11 +43,15 @@ func (o ThresholdSamplingOption) NewMiddleware() slogmulti.Middleware {
 		},
 		func(ctx context.Context, record slog.Record, next func(context.Context, slog.Record) error) error {
 			key := o.Matcher(ctx, &record)
-
 			c, _ := counters.GetOrInsert(key, newCounter())
-
 			n := c.Inc(o.Tick)
-			if n > o.Threshold && rand.Float64() >= o.Rate {
+
+			random, err := randomPercentage(1000) // 0.001 precision
+			if err != nil {
+				return err
+			}
+
+			if n > o.Threshold && random >= o.Rate {
 				hook(o.OnDropped, ctx, record)
 				return nil
 			}
