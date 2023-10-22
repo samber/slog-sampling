@@ -6,8 +6,8 @@ import (
 
 	"log/slog"
 
-	"github.com/cornelk/hashmap"
 	slogmulti "github.com/samber/slog-multi"
+	"github.com/samber/slog-sampling/buffer"
 )
 
 type ThresholdSamplingOption struct {
@@ -19,6 +19,8 @@ type ThresholdSamplingOption struct {
 
 	// Group similar logs (default: by level and message)
 	Matcher Matcher
+	Buffer  func(generator func(string) any) buffer.Buffer[string]
+	buffer  buffer.Buffer[string]
 
 	// Optional hooks
 	OnAccepted func(context.Context, slog.Record)
@@ -35,7 +37,13 @@ func (o ThresholdSamplingOption) NewMiddleware() slogmulti.Middleware {
 		o.Matcher = DefaultMatcher
 	}
 
-	counters := hashmap.New[string, *counter]() // @TODO: implement LRU or LFU draining
+	if o.Buffer == nil {
+		o.Buffer = buffer.NewUnlimitedBuffer[string]()
+	}
+
+	o.buffer = o.Buffer(func(k string) any {
+		return newCounter()
+	})
 
 	return slogmulti.NewInlineMiddleware(
 		func(ctx context.Context, level slog.Level, next func(context.Context, slog.Level) bool) bool {
@@ -43,8 +51,8 @@ func (o ThresholdSamplingOption) NewMiddleware() slogmulti.Middleware {
 		},
 		func(ctx context.Context, record slog.Record, next func(context.Context, slog.Record) error) error {
 			key := o.Matcher(ctx, &record)
-			c, _ := counters.GetOrInsert(key, newCounter())
-			n := c.Inc(o.Tick)
+			c, _ := o.buffer.GetOrInsert(key)
+			n := c.(*counter).Inc(o.Tick)
 
 			random, err := randomPercentage(1000) // 0.001 precision
 			if err != nil {

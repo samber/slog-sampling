@@ -3,6 +3,7 @@ module github.com/samber/slog-sampling
 go 1.21
 
 require (
+	github.com/bluele/gcache v0.0.2
 	github.com/cornelk/hashmap v1.0.8
 	github.com/samber/lo v1.38.1
 	github.com/samber/slog-common v0.13.0
