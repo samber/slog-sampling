@@ -12,7 +12,8 @@ import (
 
 type AbsoluteSamplingOption struct {
 	// This will log all entries with the same hash until max is reached,
-	// in a `Tick` interval as-is. Following that, it will reduce log rate depending on previous interval.
+	// in a `Tick` interval as-is. Following that, it will reduce log throughput
+	// depending on previous interval.
 	Tick time.Duration
 	Max  uint64
 

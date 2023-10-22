@@ -64,6 +64,8 @@ The sampling middleware can be used standalone or with `slog-multi` helper.
 - [Absolute sampling](#absolute-sampling): dynamic sampling beyond max accepted logs throughput
 - [Custom sampler](#custom-sampler)
 
+Similar log records can be deduplicated and rate limited using the `Matcher` API.
+
 A combination of multiple sampling strategies can be chained. Eg:
 - drop when a single log message is produced more than 100 times per second
 - drop above 1000 log records per second (globally)
@@ -94,13 +96,6 @@ import (
 option := slogsampling.UniformSamplingOption{
 	// The sample rate for sampling traces in the range [0.0, 1.0].
     Rate:       0.33,
-
-    OnAccepted: func(context.Context, slog.Record) {
-        // ...
-    },
-    OnDropped: func(context.Context, slog.Record) {
-        // ...
-    },
 }
 
 logger := slog.New(
@@ -114,7 +109,7 @@ logger := slog.New(
 
 ```go
 type ThresholdSamplingOption struct {
-    // This will log the first `Threshold` log entries with the same hash.
+    // This will log the first `Threshold` log entries with the same hash,
     // in a `Tick` interval as-is. Following that, it will allow `Rate` in the range [0.0, 1.0].
     Tick       time.Duration
     Threshold  uint64
@@ -145,13 +140,6 @@ option := slogsampling.ThresholdSamplingOption{
     Tick:       5 * time.Second,
     Threshold:  10,
     Rate:       10,
-
-    OnAccepted: func(context.Context, slog.Record) {
-        // ...
-    },
-    OnDropped: func(context.Context, slog.Record) {
-        // ...
-    },
 }
 
 logger := slog.New(
@@ -172,7 +160,53 @@ Available `Matcher`:
 
 ### Absolute sampling
 
-// TODO
+```go
+type AbsoluteSamplingOption struct {
+    // This will log all entries with the same hash until max is reached,
+    // in a `Tick` interval as-is. Following that, it will reduce log throughput
+    // depending on previous interval.
+    Tick time.Duration
+    Max  uint64
+
+    // Group similar logs (default: by level and message)
+    Matcher Matcher
+
+    // Optional hooks
+    OnAccepted func(context.Context, slog.Record)
+    OnDropped  func(context.Context, slog.Record)
+}
+```
+
+Using `slog-multi`:
+
+```go
+import (
+    slogmulti "github.com/samber/slog-multi"
+    slogsampling "github.com/samber/slog-sampling"
+    "log/slog"
+)
+
+// Will print the first 10 entries having the same level+message during the first 5s, then a fraction of messages during the following intervals.
+option := slogsampling.AbsoluteSamplingOption{
+    Tick:       5 * time.Second,
+    Max:        10,
+}
+
+logger := slog.New(
+    slogmulti.
+        Pipe(option.NewMiddleware()).
+        Handler(slog.NewJSONHandler(os.Stdout, nil)),
+)
+```
+
+Available `Matcher`:
+- `slogsampling.MatchByLevelAndMessage` (default)
+- `slogsampling.MatchAll`
+- `slogsampling.MatchByLevel`
+- `slogsampling.MatchByMessage`
+- `slogsampling.MatchBySource`
+- `slogsampling.MatchByAttribute`
+- `slogsampling.MatchByContextValue`
 
 ### Custom sampler
 
@@ -211,13 +245,6 @@ option := slogsampling.CustomSamplingOption{
         default:
             return 0.01
         }
-    },
-
-    OnAccepted: func(context.Context, slog.Record) {
-        // ...
-    },
-    OnDropped: func(context.Context, slog.Record) {
-        // ...
     },
 }
 
