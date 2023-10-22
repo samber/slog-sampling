@@ -199,10 +199,12 @@ import (
     "log/slog"
 )
 
-// Will print the first 10 entries having the same level+message during the first 5s, then a fraction of messages during the following intervals.
+// Will print the first 10 entries during the first 5s, then a fraction of messages during the following intervals.
 option := slogsampling.AbsoluteSamplingOption{
     Tick:       5 * time.Second,
     Max:        10,
+
+    Matcher: slogsampling.MatchAll(),
 }
 
 logger := slog.New(
