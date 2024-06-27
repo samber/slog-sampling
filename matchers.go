@@ -109,6 +109,7 @@ func anyToString(value any) string {
 	var buf bytes.Buffer
 	enc := gob.NewEncoder(&buf)
 
+	// bearer:disable go_lang_deserialization_of_user_input
 	err := enc.Encode(value)
 	if err != nil {
 		return fmt.Sprintf("%#v", value)
