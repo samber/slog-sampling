@@ -8,7 +8,7 @@ require (
 	github.com/samber/lo v1.47.0
 	github.com/samber/slog-common v0.15.2
 	github.com/samber/slog-multi v1.1.0
-	github.com/stretchr/testify v1.8.0
+	github.com/stretchr/testify v1.9.0
 	go.uber.org/goleak v1.3.0
 )
 
