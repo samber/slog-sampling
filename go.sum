@@ -13,8 +13,8 @@ github.com/pmezard/go-difflib v1.0.0 h1:4DBwDE0NGyQoBHbLQYPwSUPoCMWR5BEzIk/f1lZb
 github.com/pmezard/go-difflib v1.0.0/go.mod h1:iKH77koFhYxTK1pcRnkKkqfTogsbg7gZNVY4sRDYZ/4=
 github.com/samber/lo v1.47.0 h1:z7RynLwP5nbyRscyvcD043DWYoOcYRv3mV8lBeqOCLc=
 github.com/samber/lo v1.47.0/go.mod h1:RmDH9Ct32Qy3gduHQuKJ3gW1fMHAnE/fAzQuf6He5cU=
-github.com/samber/slog-common v0.15.2 h1:jQQK2MzJ1kfEsUyxI/mpwkqB2xI0qCo9Ne1D1yziuP0=
-github.com/samber/slog-common v0.15.2/go.mod h1:Qjrfhwk79XiCIhBj8+jTq1Cr0u9rlWbjawh3dWXzaHk=
+github.com/samber/slog-common v0.17.1 h1:jTqqLBgoJshpoxlPSGiypyOanjH6tY+i9bwyYmIbjhI=
+github.com/samber/slog-common v0.17.1/go.mod h1:mZSJhinB4aqHziR0SKPqpVZjJ0JO35JfH+dDIWqaCBk=
 github.com/samber/slog-multi v1.1.0 h1:m5wfpXE8Qu2gCiR/JnhFGsLcWDOmTxnso32EMffVAY0=
 github.com/samber/slog-multi v1.1.0/go.mod h1:uLAvHpGqbYgX4FSL0p1ZwoLuveIAJvBECtE07XmYvFo=
 github.com/stretchr/testify v1.9.0 h1:HtqpIVDClZ4nwg75+f6Lvsy/wHu+3BoSGCbBAcpTsTg=
