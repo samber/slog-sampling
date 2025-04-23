@@ -32,7 +32,7 @@ func TestUniformRace(t *testing.T) {
 	// numLines should be in exclusive range (0, numGoroutines)
 	// this is probabilistic so it might fail but is pretty unlikely
 	numLines := bytes.Count(buf.Bytes(), []byte("\n"))
-	if !(0 < numLines && numLines < numGoroutines) {
+	if 0 >= numLines || numLines >= numGoroutines {
 		t.Errorf("numLines=%d; should be in exclusive range (0, %d)", numLines, numGoroutines)
 		t.Error("raw output:")
 		t.Error(buf.String())
