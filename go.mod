@@ -5,7 +5,7 @@ go 1.21
 require (
 	github.com/bluele/gcache v0.0.2
 	github.com/cornelk/hashmap v1.0.8
-	github.com/samber/lo v1.51.0
+	github.com/samber/lo v1.52.0
 	github.com/samber/slog-common v0.19.0
 	github.com/samber/slog-multi v1.5.0
 	github.com/stretchr/testify v1.11.1
