@@ -21,5 +21,11 @@ type UnlimitedBuffer[K BufferKey] struct {
 }
 
 func (b UnlimitedBuffer[K]) GetOrInsert(key K) (any, bool) {
+	// Fast path: check if the key already exists to avoid calling the
+	// generator on every lookup. The generator allocates a new counter
+	// struct which is thrown away on cache hits — wasteful under high load.
+	if v, ok := b.items.Get(key); ok {
+		return v, false
+	}
 	return b.items.GetOrInsert(key, b.generator(key))
 }
