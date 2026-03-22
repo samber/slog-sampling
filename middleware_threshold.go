@@ -25,6 +25,12 @@ type ThresholdSamplingOption struct {
 	// Optional hooks
 	OnAccepted func(context.Context, slog.Record)
 	OnDropped  func(context.Context, slog.Record)
+
+	// When true, the first accepted record after a suppression window includes
+	// a "slog_sampling.dropped_count" attribute with the number of records that
+	// were dropped in the previous window. This gives operators visibility into
+	// suppression volume without a separate summary goroutine.
+	IncludeDroppedCount bool
 }
 
 // NewMiddleware returns a slog-multi middleware.
@@ -51,8 +57,9 @@ func (o ThresholdSamplingOption) NewMiddleware() slogmulti.Middleware {
 		},
 		func(ctx context.Context, record slog.Record, next func(context.Context, slog.Record) error) error {
 			key := o.Matcher(ctx, &record)
-			c, _ := o.buffer.GetOrInsert(key)
-			n := c.(*counter).Inc(o.Tick)
+			v, _ := o.buffer.GetOrInsert(key)
+			cnt := v.(*counter)
+			n := cnt.Inc(o.Tick)
 
 			random, err := randomPercentage(1000) // 0.001 precision
 			if err != nil {
@@ -60,8 +67,17 @@ func (o ThresholdSamplingOption) NewMiddleware() slogmulti.Middleware {
 			}
 
 			if n > o.Threshold && random >= o.Rate {
+				cnt.IncDropped()
 				hook(o.OnDropped, ctx, record)
 				return nil
+			}
+
+			// Attach dropped count from previous window to the first accepted
+			// record in a new window, so operators see suppression volume inline.
+			if o.IncludeDroppedCount && n == 1 {
+				if dropped := cnt.PrevDropped(); dropped > 0 {
+					record.AddAttrs(slog.Uint64("slog_sampling.dropped_count", dropped))
+				}
 			}
 
 			hook(o.OnAccepted, ctx, record)
