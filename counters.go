@@ -9,16 +9,22 @@ import (
 
 func newCounter() *counter {
 	return &counter{
-		resetAt: atomic.Int64{},
-		counter: atomic.Uint64{},
+		resetAt:     atomic.Int64{},
+		counter:     atomic.Uint64{},
+		prevDropped: atomic.Uint64{},
+		currDropped: atomic.Uint64{},
 	}
 }
 
 type counter struct {
-	resetAt atomic.Int64
-	counter atomic.Uint64
+	resetAt     atomic.Int64
+	counter     atomic.Uint64
+	prevDropped atomic.Uint64 // dropped count from the previous tick window
+	currDropped atomic.Uint64 // dropped count accumulating in the current window
 }
 
+// Inc increments the counter and returns the current count.
+// When the tick window resets, it returns 1 and rotates the dropped counter.
 func (c *counter) Inc(tick time.Duration) uint64 {
 	// i prefer not using record.Time, because only the sampling middleware time is relevant
 	tn := time.Now().UnixNano()
@@ -28,6 +34,8 @@ func (c *counter) Inc(tick time.Duration) uint64 {
 	}
 
 	c.counter.Store(1)
+	// Rotate dropped counter: current → previous, reset current
+	c.prevDropped.Store(c.currDropped.Swap(0))
 
 	newResetAfter := tn + tick.Nanoseconds()
 	if !c.resetAt.CompareAndSwap(resetAfter, newResetAfter) {
@@ -37,6 +45,16 @@ func (c *counter) Inc(tick time.Duration) uint64 {
 	}
 
 	return 1
+}
+
+// IncDropped increments the dropped counter for the current window.
+func (c *counter) IncDropped() {
+	c.currDropped.Add(1)
+}
+
+// PrevDropped returns the number of records dropped in the previous tick window.
+func (c *counter) PrevDropped() uint64 {
+	return c.prevDropped.Load()
 }
 
 func newCounterWithMemory() *counterWithMemory {
