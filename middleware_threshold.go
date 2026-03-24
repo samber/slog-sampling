@@ -70,10 +70,7 @@ func (o ThresholdSamplingOption) NewMiddleware() slogmulti.Middleware {
 					return nil
 				}
 				if o.Rate < 1.0 {
-					random, err := randomPercentage(1000) // 0.001 precision
-					if err != nil {
-						return err
-					}
+					random := randomPercentage()
 					if random >= o.Rate {
 						cnt.IncDropped()
 						hook(o.OnDropped, ctx, record)

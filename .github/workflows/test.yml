@@ -14,7 +14,6 @@ jobs:
       fail-fast: false
       matrix:
         go:
-          - '1.21'
           - '1.22'
           - '1.23'
           - '1.24'
@@ -37,6 +36,7 @@ jobs:
       run: make test
 
     - name: Fuzz
+      if: matrix.go == '1.22'
       run: make fuzz
 
     - name: Coverage
@@ -49,4 +49,4 @@ jobs:
         file: ./cover.out
         flags: unittests
         verbose: true
-      if: matrix.go == '1.21'
+      if: matrix.go == '1.22'

@@ -1,15 +1,7 @@
 package slogsampling
 
-import (
-	"crypto/rand"
-	"math/big"
-)
+import "math/rand/v2"
 
-func randomPercentage(precision int64) (float64, error) {
-	random, err := rand.Int(rand.Reader, big.NewInt(precision))
-	if err != nil {
-		return 0, err
-	}
-
-	return float64(random.Int64()) / float64(precision), nil
+func randomPercentage() float64 {
+	return rand.Float64()
 }

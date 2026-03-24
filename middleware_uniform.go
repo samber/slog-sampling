@@ -28,12 +28,16 @@ func (o UniformSamplingOption) NewMiddleware() slogmulti.Middleware {
 			return next(ctx, level)
 		},
 		func(ctx context.Context, record slog.Record, next func(context.Context, slog.Record) error) error {
-			random, err := randomPercentage(1000) // 0.001 precision
-			if err != nil {
-				return err
+			if o.Rate == 0 {
+				hook(o.OnDropped, ctx, record)
+				return nil
+			}
+			if o.Rate >= 1.0 {
+				hook(o.OnAccepted, ctx, record)
+				return next(ctx, record)
 			}
 
-			if random >= o.Rate {
+			if randomPercentage() >= o.Rate {
 				hook(o.OnDropped, ctx, record)
 				return nil
 			}

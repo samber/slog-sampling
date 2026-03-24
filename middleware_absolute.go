@@ -53,17 +53,16 @@ func (o AbsoluteSamplingOption) NewMiddleware() slogmulti.Middleware {
 			c, _ := o.buffer.GetOrInsert(key)
 			n, p := c.(*counterWithMemory).Inc(o.Tick)
 
-			random, err := randomPercentage(1000) // 0.001 precision
-			if err != nil {
-				return err
-			}
-
 			// 3 cases:
 			//   - current interval is over threshold but not previous -> drop
 			//   - previous interval is over threshold -> apply rate limit
 			//   - none of current and previous intervals are over threshold -> accept
 
-			if (n > o.Max && p <= o.Max) || (p > o.Max && random >= float64(o.Max)/float64(p)) {
+			if n > o.Max && p <= o.Max {
+				hook(o.OnDropped, ctx, record)
+				return nil
+			}
+			if p > o.Max && randomPercentage() >= float64(o.Max)/float64(p) {
 				hook(o.OnDropped, ctx, record)
 				return nil
 			}

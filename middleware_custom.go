@@ -30,13 +30,16 @@ func (o CustomSamplingOption) NewMiddleware() slogmulti.Middleware {
 				hook(o.OnDropped, ctx, record)
 				return nil
 			}
-
-			random, err := randomPercentage(1000) // 0.001 precision
-			if err != nil {
-				return err
+			if rate == 0 {
+				hook(o.OnDropped, ctx, record)
+				return nil
+			}
+			if rate == 1.0 {
+				hook(o.OnAccepted, ctx, record)
+				return next(ctx, record)
 			}
 
-			if random >= rate {
+			if randomPercentage() >= rate {
 				hook(o.OnDropped, ctx, record)
 				return nil
 			}

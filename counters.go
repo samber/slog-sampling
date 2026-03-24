@@ -3,8 +3,6 @@ package slogsampling
 import (
 	"sync/atomic"
 	"time"
-
-	"github.com/samber/lo"
 )
 
 func newCounter() *counter {
@@ -57,36 +55,38 @@ func (c *counter) PrevDropped() uint64 {
 	return c.prevDropped.Load()
 }
 
+type resetState struct {
+	resetAt       int64
+	previousCount uint64
+}
+
 func newCounterWithMemory() *counterWithMemory {
-	c := &counterWithMemory{
-		resetAtAndPreviousCounter: atomic.Pointer[lo.Tuple2[int64, uint64]]{},
-		counter:                   atomic.Uint64{},
-	}
-	c.resetAtAndPreviousCounter.Store(lo.ToPtr(lo.T2(int64(0), uint64(0))))
+	c := &counterWithMemory{}
+	c.state.Store(&resetState{})
 	return c
 }
 
 type counterWithMemory struct {
-	resetAtAndPreviousCounter atomic.Pointer[lo.Tuple2[int64, uint64]] // it would be more memory-efficient with a dedicated struct, but i'm lazy
-	counter                   atomic.Uint64
+	state   atomic.Pointer[resetState]
+	counter atomic.Uint64
 }
 
 func (c *counterWithMemory) Inc(tick time.Duration) (n uint64, previousCycle uint64) {
 	// i prefer not using record.Time, because only the sampling middleware time is relevant
 	tn := time.Now().UnixNano()
-	resetAtAndPreviousCounter := c.resetAtAndPreviousCounter.Load()
-	if resetAtAndPreviousCounter.A > tn {
-		return c.counter.Add(1), resetAtAndPreviousCounter.B
+	st := c.state.Load()
+	if st.resetAt > tn {
+		return c.counter.Add(1), st.previousCount
 	}
 
 	old := c.counter.Swap(1)
 
-	newResetAfter := lo.T2(tn+tick.Nanoseconds(), old)
-	if !c.resetAtAndPreviousCounter.CompareAndSwap(resetAtAndPreviousCounter, lo.ToPtr(newResetAfter)) {
+	newState := &resetState{resetAt: tn + tick.Nanoseconds(), previousCount: old}
+	if !c.state.CompareAndSwap(st, newState) {
 		// We raced with another goroutine trying to reset, and it also reset
 		// the counter to 1, so we need to reincrement the counter.
-		return c.counter.Add(1), resetAtAndPreviousCounter.B // we should load again instead of returning this outdated value, but it's not a big deal
+		return c.counter.Add(1), st.previousCount // we should load again instead of returning this outdated value, but it's not a big deal
 	}
 
-	return 1, resetAtAndPreviousCounter.B
+	return 1, st.previousCount
 }

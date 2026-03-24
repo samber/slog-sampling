@@ -40,17 +40,30 @@ func MatchByMessage() func(context.Context, *slog.Record) string {
 func MatchByLevelAndMessage() func(context.Context, *slog.Record) string {
 	return func(ctx context.Context, r *slog.Record) string {
 		// separator is used to avoid collisions
-		return r.Level.String() + "@" + r.Message
+		lvl := r.Level.String()
+		b := make([]byte, 0, len(lvl)+1+len(r.Message))
+		b = append(b, lvl...)
+		b = append(b, '@')
+		b = append(b, r.Message...)
+		return string(b)
 	}
 }
 
 func MatchBySource() func(context.Context, *slog.Record) string {
 	return func(ctx context.Context, r *slog.Record) string {
-		fs := runtime.CallersFrames([]uintptr{r.PC})
+		pcs := [1]uintptr{r.PC}
+		fs := runtime.CallersFrames(pcs[:])
 		f, _ := fs.Next()
 
 		// separator is used to avoid collisions
-		return fmt.Sprintf("%s@%d@%s", f.File, f.Line, f.Function)
+		line := strconv.Itoa(f.Line)
+		b := make([]byte, 0, len(f.File)+1+len(line)+1+len(f.Function))
+		b = append(b, f.File...)
+		b = append(b, '@')
+		b = append(b, line...)
+		b = append(b, '@')
+		b = append(b, f.Function...)
+		return string(b)
 	}
 }
 
@@ -93,16 +106,36 @@ func anyToString(value any) string {
 		return string(v)
 	case string:
 		return v
-	case int, int64, int32, int16, int8:
-		return strconv.FormatInt(value.(int64), 10)
-	case uint, uint64, uint32, uint16, uint8:
-		return strconv.FormatUint(value.(uint64), 10)
-	case float64, float32:
-		return strconv.FormatFloat(value.(float64), 'f', -1, 64)
+	case int:
+		return strconv.FormatInt(int64(v), 10)
+	case int8:
+		return strconv.FormatInt(int64(v), 10)
+	case int16:
+		return strconv.FormatInt(int64(v), 10)
+	case int32:
+		return strconv.FormatInt(int64(v), 10)
+	case int64:
+		return strconv.FormatInt(v, 10)
+	case uint:
+		return strconv.FormatUint(uint64(v), 10)
+	case uint8:
+		return strconv.FormatUint(uint64(v), 10)
+	case uint16:
+		return strconv.FormatUint(uint64(v), 10)
+	case uint32:
+		return strconv.FormatUint(uint64(v), 10)
+	case uint64:
+		return strconv.FormatUint(v, 10)
+	case float32:
+		return strconv.FormatFloat(float64(v), 'f', -1, 32)
+	case float64:
+		return strconv.FormatFloat(v, 'f', -1, 64)
 	case bool:
-		return strconv.FormatBool(value.(bool))
-	case complex128, complex64:
-		return strconv.FormatComplex(value.(complex128), 'f', -1, 64)
+		return strconv.FormatBool(v)
+	case complex64:
+		return strconv.FormatComplex(complex128(v), 'f', -1, 64)
+	case complex128:
+		return strconv.FormatComplex(v, 'f', -1, 128)
 	}
 
 	// gob-encodable types
