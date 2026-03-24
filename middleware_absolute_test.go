@@ -31,8 +31,8 @@ func TestAbsoluteSampling_Basic(t *testing.T) {
 	}
 
 	numLines := bytes.Count(buf.Bytes(), []byte("\n"))
-	// First window: all up to Max should be accepted, some above may be dropped
-	assert.True(t, numLines >= 1 && numLines <= 20, "numLines=%d, expected in [1, 20]", numLines)
+	// First window is deterministic: p=0, so n > Max && p <= Max → drop all above Max
+	assert.Equal(t, 10, numLines, "numLines=%d, expected exactly Max(10)", numLines)
 }
 
 func TestAbsoluteSampling_UnderMax(t *testing.T) {
@@ -63,7 +63,7 @@ func TestAbsoluteSampling_AdaptiveRate(t *testing.T) {
 	logger := slog.New(
 		slogmulti.
 			Pipe(AbsoluteSamplingOption{
-				Tick: 50 * time.Millisecond,
+				Tick: 100 * time.Millisecond,
 				Max:  10,
 				OnAccepted: func(_ context.Context, _ slog.Record) {
 					accepted.Add(1)
@@ -78,11 +78,10 @@ func TestAbsoluteSampling_AdaptiveRate(t *testing.T) {
 	}
 
 	window1Accepted := accepted.Load()
-	// In window 1: previous=0, so n > Max && p(0) <= Max → drop all above Max
-	assert.True(t, window1Accepted >= 8 && window1Accepted <= 12,
-		"window1=%d, expected ~10", window1Accepted)
+	// In window 1: previous=0, so n > Max && p(0) <= Max → drop all above Max deterministically
+	assert.Equal(t, int64(10), window1Accepted, "window1=%d, expected exactly Max(10)", window1Accepted)
 
-	time.Sleep(60 * time.Millisecond)
+	time.Sleep(200 * time.Millisecond)
 
 	// Window 2: previous=100 > Max=10 → rate limit = Max/previous = 10%
 	accepted.Store(0)
@@ -119,9 +118,8 @@ func TestAbsoluteSampling_MultipleKeys(t *testing.T) {
 	}
 
 	got := accepted.Load()
-	// Each key gets its own Max=5 in the first window, so at least 15 accepted
-	// (first window: n > Max && p <= Max → drop, so exactly 5 per key = 15)
-	assert.True(t, got >= 3 && got <= 30, "accepted=%d, expected roughly 15", got)
+	// First window is deterministic: p=0, so each key accepts exactly Max=5 → 3×5=15
+	assert.Equal(t, int64(15), got, "accepted=%d, expected exactly 15 (3 keys × Max 5)", got)
 }
 
 func TestAbsoluteSampling_Hooks(t *testing.T) {
@@ -204,9 +202,8 @@ func TestAbsoluteSampling_HighTraffic(t *testing.T) {
 	}
 
 	got := accepted.Load()
-	// First window: previous=0 <= Max, so n > Max drops all above 100
-	assert.True(t, got <= 110, "accepted=%d, expected at most ~Max(100)", got)
-	assert.True(t, got >= 90, "accepted=%d, expected at least ~Max(100)", got)
+	// First window is deterministic: p=0, n > Max && p <= Max → drop all above Max
+	assert.Equal(t, int64(100), got, "accepted=%d, expected exactly Max(100)", got)
 }
 
 func TestAbsoluteSampling_HighTrafficConcurrent(t *testing.T) {

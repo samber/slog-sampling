@@ -19,7 +19,7 @@ func TestThresholdSampling_DroppedCountAttribute(t *testing.T) {
 	var buf bytes.Buffer
 
 	sampling := ThresholdSamplingOption{
-		Tick:                50 * time.Millisecond,
+		Tick:                100 * time.Millisecond,
 		Threshold:           2,
 		Rate:                0,
 		IncludeDroppedCount: true,
@@ -37,7 +37,7 @@ func TestThresholdSampling_DroppedCountAttribute(t *testing.T) {
 	}
 
 	// Wait for window to expire
-	time.Sleep(60 * time.Millisecond)
+	time.Sleep(200 * time.Millisecond)
 
 	// Window 2: first record should have dropped_count=3 from previous window
 	buf.Reset()
@@ -62,7 +62,7 @@ func TestThresholdSampling_NoDroppedCountWhenDisabled(t *testing.T) {
 	var buf bytes.Buffer
 
 	sampling := ThresholdSamplingOption{
-		Tick:                50 * time.Millisecond,
+		Tick:                100 * time.Millisecond,
 		Threshold:           2,
 		Rate:                0,
 		IncludeDroppedCount: false, // default
@@ -79,7 +79,7 @@ func TestThresholdSampling_NoDroppedCountWhenDisabled(t *testing.T) {
 		logger.Info("test message")
 	}
 
-	time.Sleep(60 * time.Millisecond)
+	time.Sleep(200 * time.Millisecond)
 
 	// Window 2: should NOT have dropped_count
 	buf.Reset()
@@ -99,7 +99,7 @@ func TestThresholdSampling_NoDroppedCountOnFirstWindow(t *testing.T) {
 	var buf bytes.Buffer
 
 	sampling := ThresholdSamplingOption{
-		Tick:                50 * time.Millisecond,
+		Tick:                100 * time.Millisecond,
 		Threshold:           2,
 		Rate:                0,
 		IncludeDroppedCount: true,
@@ -256,7 +256,7 @@ func TestThresholdSampling_WindowReset(t *testing.T) {
 	logger := slog.New(
 		slogmulti.
 			Pipe(ThresholdSamplingOption{
-				Tick:      50 * time.Millisecond,
+				Tick:      100 * time.Millisecond,
 				Threshold: 3,
 				Rate:      0,
 				OnAccepted: func(_ context.Context, _ slog.Record) {
@@ -272,7 +272,7 @@ func TestThresholdSampling_WindowReset(t *testing.T) {
 	}
 	assert.Equal(t, int64(3), accepted.Load())
 
-	time.Sleep(60 * time.Millisecond)
+	time.Sleep(200 * time.Millisecond)
 
 	// Window 2: threshold resets
 	for i := 0; i < 10; i++ {

@@ -72,3 +72,61 @@ func BenchmarkMatchByAttribute(b *testing.B) {
 		matcher(ctx, &r)
 	}
 }
+
+func BenchmarkMatchByContextValue(b *testing.B) {
+	type ctxKey string
+	key := ctxKey("trace_id")
+	matcher := MatchByContextValue(key)
+	ctx := context.WithValue(context.Background(), key, "abc-123-def-456")
+	r := newBenchRecord()
+	b.ResetTimer()
+	for i := 0; i < b.N; i++ {
+		matcher(ctx, &r)
+	}
+}
+
+func BenchmarkCompactionFNV32a(b *testing.B) {
+	for i := 0; i < b.N; i++ {
+		CompactionFNV32a("INFO@some log message here")
+	}
+}
+
+func BenchmarkCompactionFNV64a(b *testing.B) {
+	for i := 0; i < b.N; i++ {
+		CompactionFNV64a("INFO@some log message here")
+	}
+}
+
+func BenchmarkCompactionFNV128a(b *testing.B) {
+	for i := 0; i < b.N; i++ {
+		CompactionFNV128a("INFO@some log message here")
+	}
+}
+
+func BenchmarkAnyToString(b *testing.B) {
+	b.Run("string", func(b *testing.B) {
+		for i := 0; i < b.N; i++ {
+			anyToString("hello world")
+		}
+	})
+	b.Run("int64", func(b *testing.B) {
+		for i := 0; i < b.N; i++ {
+			anyToString(int64(42))
+		}
+	})
+	b.Run("float64", func(b *testing.B) {
+		for i := 0; i < b.N; i++ {
+			anyToString(float64(3.14))
+		}
+	})
+	b.Run("bool", func(b *testing.B) {
+		for i := 0; i < b.N; i++ {
+			anyToString(true)
+		}
+	})
+	b.Run("nil", func(b *testing.B) {
+		for i := 0; i < b.N; i++ {
+			anyToString(nil)
+		}
+	})
+}
