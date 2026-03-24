@@ -21,5 +21,9 @@ type UnlimitedBuffer[K BufferKey] struct {
 }
 
 func (b UnlimitedBuffer[K]) GetOrInsert(key K) (any, bool) {
-	return b.items.GetOrInsert(key, b.generator(key))
+	if v, ok := b.items.Get(key); ok {
+		return v, false
+	}
+	v := b.generator(key)
+	return v, b.items.Insert(key, v)
 }
