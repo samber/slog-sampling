@@ -12,6 +12,17 @@ bench:
 watch-bench:
 	reflex -t 50ms -s -- sh -c 'go test -benchmem -count 3 -bench ./...'
 
+fuzz:
+	go test -fuzz=^FuzzUniformSampling$$ -fuzztime=10s .
+	go test -fuzz=^FuzzThresholdSampling$$ -fuzztime=10s .
+	go test -fuzz=^FuzzAbsoluteSampling$$ -fuzztime=10s .
+	go test -fuzz=^FuzzCustomSampling$$ -fuzztime=10s .
+	go test -fuzz=^FuzzThresholdSamplingConcurrent$$ -fuzztime=10s .
+	go test -fuzz=^FuzzAbsoluteSamplingConcurrent$$ -fuzztime=10s .
+	go test -fuzz=^FuzzUniformSamplingConcurrent$$ -fuzztime=10s .
+	go test -fuzz=^FuzzCustomSamplingConcurrent$$ -fuzztime=10s .
+	go test -fuzz=^FuzzCounterWindowBoundary$$ -fuzztime=10s .
+
 coverage:
 	go test -v -coverprofile=cover.out -covermode=atomic ./...
 	go tool cover -html=cover.out -o cover.html

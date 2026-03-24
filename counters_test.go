@@ -20,7 +20,7 @@ func TestCounter_Inc_WithinWindow(t *testing.T) {
 
 func TestCounter_Inc_WindowReset(t *testing.T) {
 	c := newCounter()
-	tick := 50 * time.Millisecond
+	tick := 100 * time.Millisecond
 
 	n := c.Inc(tick)
 	assert.Equal(t, uint64(1), n)
@@ -28,7 +28,7 @@ func TestCounter_Inc_WindowReset(t *testing.T) {
 	n = c.Inc(tick)
 	assert.Equal(t, uint64(2), n)
 
-	time.Sleep(60 * time.Millisecond)
+	time.Sleep(200 * time.Millisecond)
 
 	n = c.Inc(tick)
 	assert.Equal(t, uint64(1), n)
@@ -39,7 +39,7 @@ func TestCounter_Inc_WindowReset(t *testing.T) {
 
 func TestCounter_DroppedRotation(t *testing.T) {
 	c := newCounter()
-	tick := 50 * time.Millisecond
+	tick := 100 * time.Millisecond
 
 	// Window 1: increment counter and record some drops
 	c.Inc(tick)
@@ -50,7 +50,7 @@ func TestCounter_DroppedRotation(t *testing.T) {
 	assert.Equal(t, uint64(0), c.PrevDropped())
 
 	// Wait for window to expire
-	time.Sleep(60 * time.Millisecond)
+	time.Sleep(200 * time.Millisecond)
 
 	// Window 2: Inc triggers rotation
 	c.Inc(tick)
@@ -60,7 +60,7 @@ func TestCounter_DroppedRotation(t *testing.T) {
 	c.IncDropped()
 
 	// Wait for window 3
-	time.Sleep(60 * time.Millisecond)
+	time.Sleep(200 * time.Millisecond)
 	c.Inc(tick)
 
 	assert.Equal(t, uint64(1), c.PrevDropped())
@@ -126,14 +126,14 @@ func TestCounterWithMemory_Inc(t *testing.T) {
 
 func TestCounterWithMemory_WindowReset(t *testing.T) {
 	c := newCounterWithMemory()
-	tick := 50 * time.Millisecond
+	tick := 100 * time.Millisecond
 
 	// Window 1: log 5 times
 	for i := 0; i < 5; i++ {
 		c.Inc(tick)
 	}
 
-	time.Sleep(60 * time.Millisecond)
+	time.Sleep(200 * time.Millisecond)
 
 	// Window 2: the returned previousCycle comes from the tuple stored before reset,
 	// which was (0, 0) initially. The reset stores old counter (5) into the new tuple,
@@ -149,7 +149,7 @@ func TestCounterWithMemory_WindowReset(t *testing.T) {
 
 	c.Inc(tick) // counter = 3
 
-	time.Sleep(60 * time.Millisecond)
+	time.Sleep(200 * time.Millisecond)
 
 	// Window 3: reset returns old tuple's B = 5 (stored during window 2 reset)
 	n, prev = c.Inc(tick)
@@ -181,4 +181,50 @@ func TestCounterWithMemory_ConcurrentInc(t *testing.T) {
 
 	got := c.counter.Load()
 	assert.True(t, got >= 1 && got <= numGoroutines, "counter=%d, expected in [1, %d]", got, numGoroutines)
+}
+
+// Adversarial: concurrent Inc with very short tick forcing constant CAS races on window reset
+
+func TestCounter_ConcurrentIncDuringWindowReset(t *testing.T) {
+	c := newCounter()
+	tick := time.Millisecond // very short → many resets during test
+
+	const numGoroutines = 500
+	const incsPerGoroutine = 100
+	wg := sync.WaitGroup{}
+	wg.Add(numGoroutines)
+
+	for i := 0; i < numGoroutines; i++ {
+		go func() {
+			defer wg.Done()
+			for j := 0; j < incsPerGoroutine; j++ {
+				n := c.Inc(tick)
+				assert.True(t, n >= 1)
+			}
+		}()
+	}
+
+	wg.Wait()
+}
+
+func TestCounterWithMemory_ConcurrentIncDuringWindowReset(t *testing.T) {
+	c := newCounterWithMemory()
+	tick := time.Millisecond
+
+	const numGoroutines = 500
+	const incsPerGoroutine = 100
+	wg := sync.WaitGroup{}
+	wg.Add(numGoroutines)
+
+	for i := 0; i < numGoroutines; i++ {
+		go func() {
+			defer wg.Done()
+			for j := 0; j < incsPerGoroutine; j++ {
+				n, _ := c.Inc(tick)
+				assert.True(t, n >= 1)
+			}
+		}()
+	}
+
+	wg.Wait()
 }
