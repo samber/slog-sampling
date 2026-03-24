@@ -65,6 +65,7 @@ func (o ThresholdSamplingOption) NewMiddleware() slogmulti.Middleware {
 				// Fast path: skip expensive crypto/rand when Rate is 0 (drop all)
 				// or 1 (accept all). Only compute random when probabilistic sampling.
 				if o.Rate == 0 {
+					cnt.IncDropped()
 					hook(o.OnDropped, ctx, record)
 					return nil
 				}
@@ -74,6 +75,7 @@ func (o ThresholdSamplingOption) NewMiddleware() slogmulti.Middleware {
 						return err
 					}
 					if random >= o.Rate {
+						cnt.IncDropped()
 						hook(o.OnDropped, ctx, record)
 						return nil
 					}
