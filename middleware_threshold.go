@@ -54,14 +54,23 @@ func (o ThresholdSamplingOption) NewMiddleware() slogmulti.Middleware {
 			c, _ := o.buffer.GetOrInsert(key)
 			n := c.(*counter).Inc(o.Tick)
 
-			random, err := randomPercentage(1000) // 0.001 precision
-			if err != nil {
-				return err
-			}
-
-			if n > o.Threshold && random >= o.Rate {
-				hook(o.OnDropped, ctx, record)
-				return nil
+			if n > o.Threshold {
+				// Fast path: skip expensive crypto/rand when Rate is 0 (drop all)
+				// or 1 (accept all). Only compute random when probabilistic sampling.
+				if o.Rate == 0 {
+					hook(o.OnDropped, ctx, record)
+					return nil
+				}
+				if o.Rate < 1.0 {
+					random, err := randomPercentage(1000) // 0.001 precision
+					if err != nil {
+						return err
+					}
+					if random >= o.Rate {
+						hook(o.OnDropped, ctx, record)
+						return nil
+					}
+				}
 			}
 
 			hook(o.OnAccepted, ctx, record)
