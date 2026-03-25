@@ -2,7 +2,7 @@
 # Slog sampling policy
 
 [![tag](https://img.shields.io/github/tag/samber/slog-sampling.svg)](https://github.com/samber/slog-sampling/releases)
-![Go Version](https://img.shields.io/badge/Go-%3E%3D%201.21-%23007d9c)
+![Go Version](https://img.shields.io/badge/Go-%3E%3D%201.22-%23007d9c)
 [![GoDoc](https://godoc.org/github.com/samber/slog-sampling?status.svg)](https://pkg.go.dev/github.com/samber/slog-sampling)
 ![Build Status](https://github.com/samber/slog-sampling/actions/workflows/test.yml/badge.svg)
 [![Go report](https://goreportcard.com/badge/github.com/samber/slog-sampling)](https://goreportcard.com/report/github.com/samber/slog-sampling)
