@@ -89,6 +89,35 @@ func TestCounter_ConcurrentInc(t *testing.T) {
 	assert.True(t, got >= 1 && got <= numGoroutines, "counter=%d, expected in [1, %d]", got, numGoroutines)
 }
 
+func TestCounter_ConcurrentDroppedRotation(t *testing.T) {
+	c := newCounter()
+	tick := 100 * time.Millisecond
+
+	// Window 1: record drops before the window expires.
+	c.Inc(tick)
+	for i := 0; i < 5; i++ {
+		c.IncDropped()
+	}
+
+	time.Sleep(200 * time.Millisecond)
+
+	// Many goroutines race to be the first Inc of window 2. Whichever wins the
+	// CAS must be the only one to rotate currDropped into prevDropped, otherwise
+	// a loser can overwrite it with 0 (see issue #58).
+	const numGoroutines = 100
+	wg := sync.WaitGroup{}
+	wg.Add(numGoroutines)
+	for i := 0; i < numGoroutines; i++ {
+		go func() {
+			defer wg.Done()
+			c.Inc(tick)
+		}()
+	}
+	wg.Wait()
+
+	assert.Equal(t, uint64(5), c.PrevDropped())
+}
+
 func TestCounter_ConcurrentIncDropped(t *testing.T) {
 	c := newCounter()
 	tick := 1 * time.Second
