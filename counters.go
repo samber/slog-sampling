@@ -32,8 +32,6 @@ func (c *counter) Inc(tick time.Duration) uint64 {
 	}
 
 	c.counter.Store(1)
-	// Rotate dropped counter: current → previous, reset current
-	c.prevDropped.Store(c.currDropped.Swap(0))
 
 	newResetAfter := tn + tick.Nanoseconds()
 	if !c.resetAt.CompareAndSwap(resetAfter, newResetAfter) {
@@ -41,6 +39,11 @@ func (c *counter) Inc(tick time.Duration) uint64 {
 		// the counter to 1, so we need to reincrement the counter.
 		return c.counter.Add(1)
 	}
+
+	// Only the goroutine that won the CAS owns this window transition, so it's the
+	// only one allowed to rotate the dropped counter. Otherwise the loser would
+	// swap an already-zeroed currDropped into prevDropped, clobbering the real count.
+	c.prevDropped.Store(c.currDropped.Swap(0))
 
 	return 1
 }
