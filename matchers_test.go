@@ -147,3 +147,12 @@ func TestCompactionFNV128a(t *testing.T) {
 	assert.NotEqual(t, CompactionFNV128a("hello"), CompactionFNV128a("world"))
 	assert.NotEmpty(t, CompactionFNV128a(""))
 }
+
+func TestCompactionFNV128a_FixedLength(t *testing.T) {
+	short := CompactionFNV128a("a")
+	long := CompactionFNV128a("INFO@a much longer message than the hash itself")
+
+	assert.Len(t, short, 32)
+	assert.Len(t, long, 32)
+	assert.NotContains(t, long, "INFO@")
+}
