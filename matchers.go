@@ -4,6 +4,7 @@ import (
 	"bytes"
 	"context"
 	"encoding/gob"
+	"encoding/hex"
 	"fmt"
 	"hash/fnv"
 	"log/slog"
@@ -164,5 +165,7 @@ func CompactionFNV64a(input string) string {
 }
 
 func CompactionFNV128a(input string) string {
-	return string(fnv.New128a().Sum([]byte(input)))
+	hash := fnv.New128a()
+	hash.Write([]byte(input))
+	return hex.EncodeToString(hash.Sum(nil))
 }
